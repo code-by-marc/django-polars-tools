@@ -1,5 +1,11 @@
 # django-polars-tools
 
+[![Tests](https://github.com/code-by-marc/django-polars-tools/actions/workflows/test.yml/badge.svg)](https://github.com/code-by-marc/django-polars-tools/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/code-by-marc/django-polars-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/code-by-marc/django-polars-tools)
+[![PyPI version](https://badge.fury.io/py/django-polars-tools.svg)](https://badge.fury.io/py/django-polars-tools)
+[![Python versions](https://img.shields.io/pypi/pyversions/django-polars-tools.svg)](https://pypi.org/project/django-polars-tools/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Utilities for integrating **Django** and **Polars**, including safe
 QuerySet → DataFrame conversion, correct schema inference, and
 nullable field handling.
