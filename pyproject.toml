@@ -46,8 +46,8 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/code-by-marc/django_polars_tools"
-Issues = "https://github.com/code-by-marc/django_polars_tools/issues"
+Repository = "https://github.com/code-by-marc/django-polars-tools"
+Issues = "https://github.com/code-by-marc/django-polars-tools/issues"
 
 [tool.ruff]
 line-length = 88
