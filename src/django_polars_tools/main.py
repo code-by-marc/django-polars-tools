@@ -2,8 +2,11 @@
 import polars as pl
 from django.db import connections, models
 
+# Type alias for Polars data types (instances or type classes)
+PolarsType = pl.DataType | type[pl.DataType]
+
 # Default mapping from Django field types to Polars data types
-DJANGO_MAPPING = {
+DJANGO_MAPPING: dict[type[models.Field], PolarsType | None] = {
     models.AutoField: pl.Int32,
     models.BigAutoField: pl.Int64,
     models.BigIntegerField: pl.Int64,
@@ -42,7 +45,7 @@ if hasattr(models, "GeneratedField"):
     DJANGO_MAPPING[models.GeneratedField] = None
 
 
-def _concrete_fields_to_django_schema(fields) -> dict[str, str]:
+def _concrete_fields_to_django_schema(fields) -> dict[str, models.Field]:
     """Convert a list of Django fields to a Django schema."""
     output = {}
     for field in fields:
@@ -57,16 +60,16 @@ def _concrete_fields_to_django_schema(fields) -> dict[str, str]:
 
 def _queryset_to_polars_schema(
     django_schema: dict[str, models.Field],
-    django_to_polars_mapping: dict[type[models.Field], pl.DataType],
-) -> dict[str, pl.DataType]:
-    polars_schema = {}
+    django_to_polars_mapping: dict[type[models.Field], PolarsType | None],
+) -> dict[str, PolarsType]:
+    polars_schema: dict[str, PolarsType] = {}
     for column_name, django_field_class in django_schema.items():
         polars_dtype = django_to_polars_mapping.get(django_field_class.__class__)
         if polars_dtype == pl.Decimal:
             # Handle DecimalField separately as it requires scale and precision
             polars_schema[column_name] = pl.Decimal(
-                scale=django_field_class.decimal_places,
-                precision=django_field_class.max_digits,
+                scale=getattr(django_field_class, "decimal_places", 0),
+                precision=getattr(django_field_class, "max_digits", None),
             )
         elif polars_dtype is not None:
             polars_schema[column_name] = polars_dtype
@@ -103,7 +106,7 @@ def _queryset_to_django_schema(queryset: models.QuerySet) -> dict[str, models.Fi
 
 
 def _read_database(
-    queryset: models.QuerySet, schema: dict[str, pl.DataType], **kwargs
+    queryset: models.QuerySet, schema: dict[str, PolarsType], **kwargs
 ) -> pl.DataFrame:
     with connections[queryset.db].cursor() as cursor:
         return pl.read_database(
@@ -116,7 +119,7 @@ def _read_database(
 
 def django_queryset_to_dataframe(
     queryset: models.QuerySet,
-    mapping: dict[type[models.Field], pl.DataType] | None = None,
+    mapping: dict[type[models.Field], PolarsType | None] | None = None,
     **kwargs,
 ) -> pl.DataFrame:
     mapping = mapping or DJANGO_MAPPING

@@ -43,6 +43,8 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.8.0",
     "tox>=4.0",
+    "mypy>=1.0",
+    "django-stubs>=4.2",
 ]
 
 [project.urls]

@@ -258,6 +258,4 @@ def test_polars_type_none(
     queryset = test_model.objects.all()
 
     with pytest.raises(ValueError, match="No mapping for Django field type"):
-        polars_schema_django.django_queryset_to_dataframe(
-            queryset, mapping=mapping
-        )
+        polars_schema_django.django_queryset_to_dataframe(queryset, mapping=mapping)

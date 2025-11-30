@@ -1,4 +1,4 @@
-# django_polars_tools
+# django-polars-tools
 
 Utilities for integrating **Django** and **Polars**, including safe
 QuerySet → DataFrame conversion, correct schema inference, and
