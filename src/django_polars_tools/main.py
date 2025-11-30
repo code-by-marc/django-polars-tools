@@ -94,7 +94,6 @@ def _queryset_to_django_schema(queryset: models.QuerySet) -> dict[str, models.Fi
     # Using .values() then .get_select() will contain the selected fields only
     schema = {}
     selected_fields = queryset.query.get_compiler(using=queryset.db).get_select()[0]
-    print(f"{selected_fields=}")
     for field in selected_fields:
         # field[2] is the alias, field[0].field is the Django field
         # In Django 4.2, alias can be None for some fields, use the field's column name
