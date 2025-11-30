@@ -89,8 +89,6 @@ def test_model() -> Any:
         del app_config.models["testmodel"]
 
 
-
-
 @pytest.fixture()
 def book_models() -> Any:
     """Create a temporary Django model for testing."""
@@ -145,9 +143,12 @@ def test_data(test_model: models.Model) -> list[dict[str, Any]]:
         # file_field=None,  # TODO: Figure out how to test file_field
         file_path_field="/path/to/your/hearth",
         float_field=0.99,
-        # generated_field = models.GeneratedField(),  # TODO: Figure out if this needs to be tested.
+        # generated_field = models.GeneratedField(),
+        # TODO: Figure out if this needs to be tested.
         generic_ip_address_field="127.0.0.1",
-        # image_field=None,  # TODO: (fields.E210) Cannot use ImageField because Pillow is not installed
+        # image_field=None,
+        # TODO: (fields.E210) Cannot use ImageField
+        # because Pillow is not installed
         integer_field=2_147_483_647,
         # json_field=json.dumps({"key": "value"}),
         positive_big_integer_field=9_223_372_036_854_775_807,
@@ -228,6 +229,17 @@ def test_queryset_relation(
     book_models: models.Model, book_data: list[dict[str, Any]]
 ) -> None:
     author_model, book_model = book_models
+    queryset = book_model.objects.all()
+    df = polars_schema_django.django_queryset_to_dataframe(
+        queryset, infer_schema_length=1
+    )
+    assert isinstance(df, pl.DataFrame)
+
+
+def test_queryset_relation_values(
+    book_models: models.Model, book_data: list[dict[str, Any]]
+) -> None:
+    author_model, book_model = book_models
     queryset = book_model.objects.all().values(
         "title",
         "author__name",
@@ -236,3 +248,16 @@ def test_queryset_relation(
         queryset, infer_schema_length=1
     )
     assert isinstance(df, pl.DataFrame)
+
+
+def test_polars_type_none(
+    test_model: models.Model, test_data: list[dict[str, Any]]
+) -> None:
+    mapping = polars_schema_django.DJANGO_MAPPING.copy()
+    mapping[models.CharField] = None  # Intentionally set to None to test error handling
+    queryset = test_model.objects.all()
+
+    with pytest.raises(ValueError, match="No mapping for Django field type"):
+        polars_schema_django.django_queryset_to_dataframe(
+            queryset, mapping=mapping
+        )
