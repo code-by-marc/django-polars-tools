@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import django
@@ -23,6 +23,7 @@ def django_setup() -> None:
                 }
             },
             INSTALLED_APPS=["__main__"],
+            USE_TZ=True,
         )
     django.setup()
 
@@ -88,6 +89,44 @@ def test_model() -> Any:
         del app_config.models["testmodel"]
 
 
+
+
+@pytest.fixture()
+def book_models() -> Any:
+    """Create a temporary Django model for testing."""
+
+    class AuthorModel(models.Model):
+        class Meta:
+            app_label = "__main__"
+
+        name = models.CharField(max_length=100, null=True)
+
+    class BookModel(models.Model):
+        class Meta:
+            app_label = "__main__"
+
+        title = models.CharField(max_length=100, null=True)
+        author = models.ForeignKey(AuthorModel, on_delete=models.CASCADE, null=True)
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(AuthorModel)
+        schema_editor.create_model(BookModel)
+
+    yield AuthorModel, BookModel
+
+    # Clean up: delete table and unregister model from app registry
+    with connection.schema_editor() as schema_editor:
+        schema_editor.delete_model(BookModel)  # Delete child table first
+        schema_editor.delete_model(AuthorModel)
+
+    # Unregister the model to avoid reloading warning
+    app_config = apps.get_app_config("__main__")
+    if "bookmodel" in app_config.models:
+        del app_config.models["bookmodel"]
+    if "authormodel" in app_config.models:
+        del app_config.models["authormodel"]
+
+
 @pytest.fixture
 def test_data(test_model: models.Model) -> list[dict[str, Any]]:
     test_model.objects.create()
@@ -98,8 +137,8 @@ def test_data(test_model: models.Model) -> list[dict[str, Any]]:
         binary_field=b"110100100",
         boolean_field=True,
         char_field="Hello World!",
-        date_field=datetime.now(tz=UTC),
-        date_time_field=datetime.now(tz=UTC),
+        date_field=datetime.now(tz=timezone.utc),
+        date_time_field=datetime.now(tz=timezone.utc),
         decimal_field=99.99,
         duration_field=timedelta(seconds=30),
         email_field="example@domain.com",
@@ -118,11 +157,27 @@ def test_data(test_model: models.Model) -> list[dict[str, Any]]:
         # small_auto_field = models.SmallAutoField()  # Not required to test
         small_integer_field=32_767,
         text_field="This is some text.",
-        time_field=datetime.now(tz=UTC),
+        time_field=datetime.now(tz=timezone.utc),
         url_field="www.example.com",
         # uuid_field=uuid4(),
     )
     return list(test_model.objects.all().values())
+
+
+@pytest.fixture
+def book_data(book_models: models.Model) -> list[dict[str, Any]]:
+    author_model, book_model = book_models
+    author1 = author_model.objects.create()
+    author1.save()
+    book1 = book_model.objects.create()
+    book1.save()
+
+    author2 = author_model.objects.create(name="John Doe")
+    author2.save()
+    book2 = book_model.objects.create(title="Sample Book", author=author2)
+    book2.save()
+
+    return list(book_model.objects.all().values())
 
 
 def test_queryset(test_model: models.Model, test_data: list[dict[str, Any]]) -> None:
@@ -162,6 +217,20 @@ def test_queryset_values_and_annotations(
             char_field_upper=models.functions.Upper("char_field"),
             char_field_length=models.functions.Length("char_field"),
         )
+    )
+    df = polars_schema_django.django_queryset_to_dataframe(
+        queryset, infer_schema_length=1
+    )
+    assert isinstance(df, pl.DataFrame)
+
+
+def test_queryset_relation(
+    book_models: models.Model, book_data: list[dict[str, Any]]
+) -> None:
+    author_model, book_model = book_models
+    queryset = book_model.objects.all().values(
+        "title",
+        "author__name",
     )
     df = polars_schema_django.django_queryset_to_dataframe(
         queryset, infer_schema_length=1

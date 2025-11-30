@@ -18,7 +18,6 @@ DJANGO_MAPPING = {
     models.FileField: None,
     models.FilePathField: pl.String,
     models.FloatField: pl.Float64,
-    models.GeneratedField: None,
     models.GenericIPAddressField: pl.String,
     models.ImageField: None,
     models.IntegerField: pl.Int32,
@@ -37,6 +36,10 @@ DJANGO_MAPPING = {
     models.ManyToManyField: None,  # ManyToMany fields cannot be used directly
     models.OneToOneField: None,  # OneToOne fields cannot be used directly
 }
+
+# Add GeneratedField support for Django 5.0+
+if hasattr(models, "GeneratedField"):
+    DJANGO_MAPPING[models.GeneratedField] = None
 
 
 def _concrete_fields_to_django_schema(fields) -> dict[str, str]:
@@ -91,8 +94,12 @@ def _queryset_to_django_schema(queryset: models.QuerySet) -> dict[str, models.Fi
     # Using .values() then .get_select() will contain the selected fields only
     schema = {}
     selected_fields = queryset.query.get_compiler(using=queryset.db).get_select()[0]
+    print(f"{selected_fields=}")
     for field in selected_fields:
-        schema[field[2]] = field[0].field
+        # field[2] is the alias, field[0].field is the Django field
+        # In Django 4.2, alias can be None for some fields, use the field's column name
+        alias = field[2] or field[0].field.column
+        schema[alias] = field[0].field
     return schema
 
 

@@ -5,10 +5,33 @@ build-backend = "uv_build"
 [project]
 name = "django-polars-tools"
 version = "0.1.0"
+authors = [
+  { name="Marc", email="codebymarc@pm.me" },
+]
 description = "Tools for converting Django QuerySets to Polars DataFrames with correct schema handling, nullable field support, and high-performance data extraction."
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
+keywords = ["django", "polars", "dataframe", "queryset", "orm", "data-analysis"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
+]
 dependencies = [
     "django>=4.2",
     "polars>=0.20.0",
@@ -18,7 +41,12 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "ruff>=0.8.0",
+    "tox>=4.0",
 ]
+
+[project.urls]
+Repository = "https://github.com/code-by-marc/django_polars_tools"
+Issues = "https://github.com/code-by-marc/django_polars_tools/issues"
 
 [tool.ruff]
 line-length = 88
