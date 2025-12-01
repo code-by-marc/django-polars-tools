@@ -69,3 +69,17 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["django_polars_tools"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "django.*"
+ignore_missing_imports = false
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"

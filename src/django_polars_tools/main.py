@@ -38,6 +38,7 @@ DJANGO_MAPPING: dict[type[models.Field], PolarsType | None] = {
     models.ForeignKey: None,  # ForeignKey fields cannot be used directly
     models.ManyToManyField: None,  # ManyToMany fields cannot be used directly
     models.OneToOneField: None,  # OneToOne fields cannot be used directly
+    models.fields.proxy.OrderWrt: pl.Int32,
 }
 
 # Add GeneratedField support for Django 5.0+
@@ -109,7 +110,7 @@ def _read_database(
     queryset: models.QuerySet, schema: dict[str, PolarsType], **kwargs
 ) -> pl.DataFrame:
     with connections[queryset.db].cursor() as cursor:
-        return pl.read_database(
+        return pl.read_database(  # type: ignore[no-any-return]
             query=str(queryset.query),
             connection=cursor,
             schema_overrides=schema,

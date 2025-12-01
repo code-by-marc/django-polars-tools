@@ -102,6 +102,7 @@ def book_models() -> Any:
     class BookModel(models.Model):
         class Meta:
             app_label = "__main__"
+            order_with_respect_to = "author"
 
         title = models.CharField(max_length=100, null=True)
         author = models.ForeignKey(AuthorModel, on_delete=models.CASCADE, null=True)

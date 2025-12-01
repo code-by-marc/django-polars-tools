@@ -29,13 +29,13 @@ More features will be added as the project grows toward deeper Django ↔ Polars
 ## 📦 Installation
 
 ```bash
-pip install django_polars_tools
+pip install django-polars-tools
 ```
 
 Or with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv add django_polars_tools
+uv add django-polars-tools
 ```
 
 ## 📚 Usage
