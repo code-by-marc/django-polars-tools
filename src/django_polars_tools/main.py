@@ -109,10 +109,13 @@ def _queryset_to_django_schema(queryset: models.QuerySet) -> dict[str, models.Fi
 def _read_database(
     queryset: models.QuerySet, schema: dict[str, PolarsType], **kwargs
 ) -> pl.DataFrame:
+    sql, params = queryset.query.sql_with_params()
+
     with connections[queryset.db].cursor() as cursor:
         return pl.read_database(  # type: ignore[no-any-return]
-            query=str(queryset.query),
+            query=sql,
             connection=cursor,
+            execute_options={"params": params or ()},
             schema_overrides=schema,
             **kwargs,
         )
