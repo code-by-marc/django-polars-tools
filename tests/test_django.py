@@ -182,14 +182,27 @@ def book_data(book_models: models.Model) -> list[dict[str, Any]]:
     return list(book_model.objects.all().values())
 
 
-def test_queryset(test_model: models.Model, test_data: list[dict[str, Any]]) -> None:
+@pytest.mark.usefixtures("test_data")
+def test_queryset(
+    test_model: models.Model,
+) -> None:
     queryset = test_model.objects.all()
     df = polars_schema_django.django_queryset_to_dataframe(queryset)
     assert isinstance(df, pl.DataFrame)
 
 
+@pytest.mark.usefixtures("test_data")
+def test_queryset_filter(
+    test_model: models.Model,
+) -> None:
+    queryset = test_model.objects.filter(boolean_field=True)
+    df = polars_schema_django.django_queryset_to_dataframe(queryset)
+    assert isinstance(df, pl.DataFrame)
+
+
+@pytest.mark.usefixtures("test_data")
 def test_queryset_annotation(
-    test_model: models.Model, test_data: list[dict[str, Any]]
+    test_model: models.Model,
 ) -> None:
     queryset = test_model.objects.all().annotate(
         char_field_upper=models.functions.Upper("char_field"),
@@ -199,8 +212,9 @@ def test_queryset_annotation(
     assert isinstance(df, pl.DataFrame)
 
 
+@pytest.mark.usefixtures("test_data")
 def test_queryset_values_and_annotations(
-    test_model: models.Model, test_data: list[dict[str, Any]]
+    test_model: models.Model,
 ) -> None:
     queryset = (
         test_model.objects.all()
@@ -226,8 +240,9 @@ def test_queryset_values_and_annotations(
     assert isinstance(df, pl.DataFrame)
 
 
+@pytest.mark.usefixtures("book_data")
 def test_queryset_relation(
-    book_models: models.Model, book_data: list[dict[str, Any]]
+    book_models: models.Model,
 ) -> None:
     author_model, book_model = book_models
     queryset = book_model.objects.all()
